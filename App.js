@@ -9,17 +9,28 @@ let camera;
 export default function App() {
   const [type, setType] = useState(CameraType.back);
   const [permission, requestPermission] = Camera.useCameraPermissions();
+  const [zoomLevel, setZoomLevel] = useState(0);
 
   const handleCapture = async () => {
-    if(camera){
-      const options = {quality: 0.7};
+    if (camera) {
+      const options = { quality: 0.7 };
       const data = await camera.takePictureAsync(options);
 
       await MediaLibrary.saveToLibraryAsync(data.uri) // çekilen fotoğrafı galeriye kaydetme
 
-      console.log("data",data);
     }
 
+  };
+
+  const handleZoom = (type) => {
+    setZoomLevel((prev) =>
+      type === '+'
+        ? prev === 100
+          ? 100
+          : prev + 10
+        : prev === 0
+          ? 0
+          : prev - 10)
   }
 
   if (!permission) {
@@ -43,17 +54,40 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Camera style={styles.camera} type={type} 
-      ref={(ref) => {camera=ref ; }}
+      <Camera
+        style={styles.camera}
+        type={type}
+        zoom={zoomLevel / 100}
+        ref={(ref) => { camera = ref; }}
       >
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
+          <TouchableOpacity style={styles.text} onPress={toggleCameraType}>
             <Text style={styles.text}>Flip </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleCapture}> 
+          <TouchableOpacity onPress={handleCapture}>
             <Text style={styles.text}>Take Photo</Text>
           </TouchableOpacity>
+
+          <Text>{zoomLevel / 100}</Text>
+
+          <View style={styles.zoomContainer}>
+            <TouchableOpacity
+              style={styles.zoom}
+              onPress={() => handleZoom("-")}
+              disabled={zoomLevel / 100 === 0}
+            >
+              <Text style={styles.zoomtext}>-</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.zoom}
+              onPress={() => handleZoom("+")}
+              disabled={zoomLevel / 100 === 1}
+            >
+              <Text style={styles.zoomtext}>+</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Camera>
     </View>
@@ -63,18 +97,19 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
   },
   camera: {
     flex: 1,
+    justifyContent: "flex-end",
   },
   buttonContainer: {
-    flex: 1,
     flexDirection: 'row',
     backgroundColor: 'transparent',
-    margin: 64,
-    alignItems:"flex-end",
-    justifyContent:"space-around",
+    //margin: 64,
+    marginVertical: 20,
+    alignItems: "center",
+    justifyContent: "space-around",
+    backgroundColor: "#999",
   },
   button: {
     flex: 1,
@@ -85,5 +120,21 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
+  },
+  zoomContainer: {
+    flexDirection: "row",
+
+  },
+  zoom: {
+    width: 40,
+    height: 40,
+    backgroundColor: "red",
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 2,
+  },
+  zoomtext: {
+    fontSize: 30,
   },
 });
